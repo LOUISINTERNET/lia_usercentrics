@@ -1,0 +1,29 @@
+plugin.tx_liausercentrics {
+  srcUrl = {$plugin.tx_liausercentrics.srcUrl}
+  settingsId = {$plugin.tx_liausercentrics.settingsId}
+  ucQueryParameter = {$plugin.tx_liausercentrics.ucQueryParameter}
+  language = TEXT
+  language.data = siteLanguage:locale:languageCode
+  settings {
+    active = {$plugin.tx_liausercentrics.settings.activate}
+    async = {$plugin.tx_liausercentrics.settings.async}
+    useSmartDataProtector = {$plugin.tx_liausercentrics.settings.useSmartDataProtector}
+    footerLink = {$plugin.tx_liausercentrics.settings.footerLink}
+    excludedPages = {$plugin.tx_liausercentrics.settings.excludedPages}
+    whitelistedSDPServices = {$plugin.tx_liausercentrics.settings.whitelistedSDPServices}
+    customOverlayIntegration = {$plugin.tx_liausercentrics.settings.customOverlayIntegration}
+    reloadOnOptIn = {$plugin.tx_liausercentrics.settings.reloadOnOptIn}
+    reloadOnOptOut = {$plugin.tx_liausercentrics.settings.reloadOnOptOut}
+  }
+}
+
+[usercentricsIsActive('{$plugin.tx_liausercentrics.settings.activate}', '{$plugin.tx_liausercentrics.settingsId}')]
+  lib.contentElement.settings.usercentrics {
+    active = {$plugin.tx_liausercentrics.settings.activate}
+  }
+
+  page.10.settings.usercentrics {
+    active = {$plugin.tx_liausercentrics.settings.activate}
+    footerLink = {$plugin.tx_liausercentrics.settings.footerLink}
+  }
+[global]

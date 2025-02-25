@@ -1,0 +1,30 @@
+# customcategory=usercentrics=Usercentrics
+plugin.tx_liausercentrics {
+  # cat=usercentrics; type=string; label=Usercentrics API script URL
+  srcUrl = https://web.cmp.usercentrics.eu/ui/loader.js
+  # cat=usercentrics; type=string; label=Usercentrics ID
+  settingsId =
+  # cat=usercentrics; type=string; label=Query parameter value: This is the value of a url parameter to ignore the integration
+  ucQueryParameter =
+  # customsubcategory=sett=Settings
+  settings {
+    # cat=usercentrics/settings/a; type=boolean; label=Activate: Activate Usercentrics integration for this domain.
+    activate = 0
+    # cat=usercentrics/settings/a; type=boolean; label=Async: Loading UC Script async.
+    async = 0
+    # cat=usercentrics/settings/b; type=boolean; label=Smart Data Protector: Activate the integration of the Smart Data Protector.
+    useSmartDataProtector = 0
+    # cat=usercentrics/settings/c; type=boolean; label=Show Usercentrics link in footer
+    footerLink = 0
+    # cat=usercentrics/settings/d; type=string; label=Page list: On this pages is no Usercentrics integration.
+    excludedPages =
+    # cat=usercentrics/settings/e; type=string; label=Service whitelist: A comma separated list of service ids.
+    whitelistedSDPServices =
+    # cat=usercentrics/settings/f; type=string; label=Custom services Overlay integration: ServiceID:target
+    customOverlayIntegration =
+    # cat=usercentrics/settings/g; type=string; label=Reload on OptIn
+    reloadOnOptIn =
+    # cat=usercentrics/settings/h; type=string; label=Reload on OptOut
+    reloadOnOptOut =
+  }
+}

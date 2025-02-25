@@ -1,0 +1,59 @@
+{
+  "name": "lia/lia_usercentrics",
+  "type": "typo3-cms-extension",
+  "description": "This TYPO3 extension integrates a cookie banner for managing consent for external services such as analytics, social media, etc. It ensures that external sources (like YouTube videos, Vimeo, or other integrated services) are blocked by default until the user grants consent for their use.",
+  "authors": [
+    {
+      "name": "LOUIS TYPO3 Developers",
+      "email": "info@dev.louis.info",
+      "homepage": "https://www.louis.info",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "email": "info@dev.louis.info",
+    "source": "https://github.com/LOUISINTERNET/lia_usercentrics",
+    "docs": "https://docs.typo3.org/p/lia/lia_usercentrics/main/en-us/",
+    "issues": "https://github.com/LOUISINTERNET/lia_usercentrics/issues"
+  },
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "typo3/cms-core": "^13.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "LIA\\LiaUsercentrics\\": "Classes"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "LIA\\LiaUsercentrics\\Tests\\": "Tests"
+    }
+  },
+  "extra": {
+    "typo3/cms": {
+      "extension-key": "lia_usercentrics"
+    }
+  },
+  "config": {
+    "vendor-dir": ".Build/vendor",
+    "bin-dir": ".Build/bin",
+    "allow-plugins": {
+      "typo3/cms-composer-installers": true,
+      "typo3/class-alias-loader": true
+    }
+  },
+  "replace": {
+    "lia/lia-usercentrics": "self.version"
+  },
+  "scripts": {
+    "build-docs": [
+      "docker run --rm --pull always -v $(pwd):/project -it ghcr.io/typo3-documentation/render-guides:latest --config=Documentation"
+    ]
+  },
+  "require-dev": {
+    "typo3/testing-framework": "^8.0",
+    "typo3/coding-standards": "^0.8.0",
+    "t3docs/fluid-documentation-generator": "^4.4"
+  }
+}
