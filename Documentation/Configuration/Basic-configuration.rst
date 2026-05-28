@@ -38,6 +38,7 @@ Now place this code in it and set the constants to your need.
       ucQueryParameter =
       settings {
         activate = 0
+        tcfEnabled = 0
         useSmartDataProtector = 0
         footerLink = 0
         excludedPages =
@@ -90,6 +91,32 @@ This means that they are available on all pages in the settings via `settings.us
 
 
 .. code-block:: html
+
     <f:if condition="{settings.usercentrics.active} && {settings.usercentrics.footerLink}">
         <a href="#" onClick="  window.__ucCmp.showSecondLayer()">Cookie-Management</a>
     </f:if>
+
+
+TCF enabled
+~~~~~~~~~~~
+
+Set the constant ``tcfEnabled`` to ``1`` to add the ``data-tcf-enabled`` attribute to the Usercentrics script tag.
+This activates the IAB Transparency & Consent Framework (TCF) mode in Usercentrics.
+
+.. seealso::
+    `IAB TCF documentation <https://usercentrics.com/knowledge-hub/iab-tcf/>`__ on the Usercentrics website.
+
+.. code-block:: typoscript
+    :caption: EXT:site_package/Configuration/TypoScript/Extensions/LiaUsercentrics/Constants.typoscript
+
+    plugin.tx_liausercentrics {
+      settings {
+        tcfEnabled = 1
+      }
+    }
+
+This renders the following script tag in the page header:
+
+.. code-block:: html
+
+    <script id="usercentrics-cmp" src="..." data-settings-id="..." data-language="..." data-tcf-enabled></script>

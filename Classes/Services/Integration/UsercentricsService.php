@@ -145,18 +145,18 @@ class UsercentricsService
         $srcUrl = $usercentricsConfig['srcUrl'];
         $useSDP = $usercentricsConfig['settings']['useSmartDataProtector'] ?? false;
         $async = (bool) $usercentricsConfig['settings']['async'] ?? false;
+        $tcfEnabled = (bool) ($usercentricsConfig['settings']['tcfEnabled'] ?? false);
 
         if (empty($srcUrl) || empty($language) || empty($settingsId)) {
             throw new LiaUsercentricsException('Your Usercentrics configuration is not valid. Please make sure that the srcUrl, settingsId and language constants are set.', 1740655898);
         }
 
         if (!empty($srcUrl) && !empty($language) && !empty($settingsId)) {
-            $asyncAttr = '';
-            if ($async) {
-                $asyncAttr = 'async';
-            }
             $this->pageRenderer->addHeaderData(
-                '<script id="usercentrics-cmp" src="' . $srcUrl . '" data-settings-id="' . $settingsId . '" data-language="' . $language . '" ' . $asyncAttr . '></script>'
+                '<script id="usercentrics-cmp" src="' . $srcUrl . '" data-settings-id="' . $settingsId . '" data-language="' . $language . '"'
+                . ($tcfEnabled ? ' data-tcf-enabled' : '')
+                . ($async ? ' async' : '')
+                . '></script>'
             );
             if ($useSDP) {
                 $this->pageRenderer->addHeaderData(

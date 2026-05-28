@@ -7,6 +7,7 @@ plugin.tx_liausercentrics {
   settings {
     active = {$plugin.tx_liausercentrics.settings.activate}
     async = {$plugin.tx_liausercentrics.settings.async}
+    tcfEnabled = {$plugin.tx_liausercentrics.settings.tcfEnabled}
     useSmartDataProtector = {$plugin.tx_liausercentrics.settings.useSmartDataProtector}
     footerLink = {$plugin.tx_liausercentrics.settings.footerLink}
     excludedPages = {$plugin.tx_liausercentrics.settings.excludedPages}

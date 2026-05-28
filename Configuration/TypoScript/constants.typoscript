@@ -12,6 +12,8 @@ plugin.tx_liausercentrics {
     activate = 0
     # cat=usercentrics/settings/a; type=boolean; label=Async: Loading UC Script async.
     async = 0
+    # cat=usercentrics/settings/a; type=boolean; label=TCF enabled: Activate IAB Transparency & Consent Framework mode.
+    tcfEnabled = 0
     # cat=usercentrics/settings/b; type=boolean; label=Smart Data Protector: Activate the integration of the Smart Data Protector.
     useSmartDataProtector = 0
     # cat=usercentrics/settings/c; type=boolean; label=Show Usercentrics link in footer
