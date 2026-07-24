@@ -80,6 +80,11 @@ class UsercentricsService
      */
     public function isActive(): bool
     {
+        $request = ServerRequestService::getServerRequest();
+        if (empty($request) || !ApplicationType::fromRequest($request)->isFrontend()) {
+            return false;
+        }
+
         $usercentricsSettings = $this->typoscriptReader->getUsercentricsSettings();
 
         if (!in_array($usercentricsSettings['active'], ['0', '1'])) {
