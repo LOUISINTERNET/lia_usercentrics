@@ -16,6 +16,10 @@ Restrict the Smart Data Protector
 The Smart Data Protector scans for integrated services each time a page is called up and blocks them if it recognizes and
 the cookie for this service is not set. To limit the list of services, you can enter the Template IDs in the constant `whitelistedSDPServices` separated by a comma.
 
+.. warning::
+    The settings `whitelistedSDPServices`, `customOverlayIntegration`, `reloadOnOptIn` and `reloadOnOptOut`
+    are only applied when `useSmartDataProtector = 1`. Otherwise, the settings are ignored.
+
 You can find the template IDs when configuring the services in Usercentrics.
 
 `Here <https://docs.usercentrics.com/#/smart-data-protector?id=currently-supported-technologies>`__ you will also find all the services known to the Smart Data Protector.
@@ -33,7 +37,7 @@ You can find the template IDs when configuring the services in Usercentrics.
       ucQueryParameter =
       settings {
         activate = 0
-        useSmartDataProtector = 0
+        useSmartDataProtector = 1
         footerLink = 0
         excludedPages =
         whitelistedSDPServices = S1pcEj_jZX, BJ59EidsWQ, Hko_qNsui-Q, BJz7qNsdj-7, HyEX5Nidi-m
@@ -60,7 +64,7 @@ You can add several configurations here. These only need to be separated by a co
       ucQueryParameter =
       settings {
         activate = 0
-        useSmartDataProtector = 0
+        useSmartDataProtector = 1
         footerLink = 0
         excludedPages =
         whitelistedSDPServices = S1pcEj_jZX, BJ59EidsWQ, Hko_qNsui-Q, BJz7qNsdj-7, HyEX5Nidi-m

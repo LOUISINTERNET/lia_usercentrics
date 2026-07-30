@@ -220,20 +220,22 @@ class UsercentricsService
     {
         $usercentricsSettings = $this->typoscriptReader->getUsercentricsSettings();
 
-        if (!empty($usercentricsSettings['whitelistedSDPServices'])) {
-            $this->addBlockOnlyInlineScript($usercentricsSettings['whitelistedSDPServices']);
-        }
+        if (!empty($usercentricsSettings['useSmartDataProtector'])) {
+            if (!empty($usercentricsSettings['whitelistedSDPServices'])) {
+                $this->addBlockOnlyInlineScript($usercentricsSettings['whitelistedSDPServices']);
+            }
 
-        if (!empty($usercentricsSettings['customOverlayIntegration'])) {
-            $this->customOverlayIntegration($usercentricsSettings['customOverlayIntegration']);
-        }
+            if (!empty($usercentricsSettings['customOverlayIntegration'])) {
+                $this->customOverlayIntegration($usercentricsSettings['customOverlayIntegration']);
+            }
 
-        if (!empty($usercentricsSettings['reloadOnOptIn'])) {
-            $this->addReloadOnOptInOrOutConfiguration($usercentricsSettings['reloadOnOptIn']);
-        }
+            if (!empty($usercentricsSettings['reloadOnOptIn'])) {
+                $this->addReloadOnOptInOrOutConfiguration($usercentricsSettings['reloadOnOptIn']);
+            }
 
-        if (!empty($usercentricsSettings['reloadOnOptOut'])) {
-            $this->addReloadOnOptInOrOutConfiguration($usercentricsSettings['reloadOnOptOut'], 'reloadOnOptOut');
+            if (!empty($usercentricsSettings['reloadOnOptOut'])) {
+                $this->addReloadOnOptInOrOutConfiguration($usercentricsSettings['reloadOnOptOut'], 'reloadOnOptOut');
+            }
         }
 
         // Provide opportunity to add custom settings.
