@@ -1,0 +1,68 @@
+[data-lia-consent="blocked"] {
+  position: relative;
+}
+
+[data-lia-consent="blocked"] iframe[uc-src] {
+  visibility: hidden;
+}
+
+.lia-consent-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: var(--lia-consent-placeholder-z-index, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--lia-consent-placeholder-gap, 0.75rem);
+  padding: var(--lia-consent-placeholder-padding, 1.5rem);
+  overflow: auto;
+  background: var(--lia-consent-placeholder-background, #f3f3f3);
+  color: var(--lia-consent-placeholder-color, #1a1a1a);
+  font-family: var(--lia-consent-placeholder-font-family, inherit);
+  font-size: var(--lia-consent-placeholder-font-size, 1rem);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.lia-consent-placeholder__service {
+  margin: 0;
+  font-weight: 700;
+}
+
+.lia-consent-placeholder__text {
+  max-width: 40rem;
+  margin: 0;
+}
+
+.lia-consent-placeholder__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--lia-consent-placeholder-gap, 0.75rem);
+}
+
+.lia-consent-placeholder__button {
+  min-height: 2.75rem;
+  padding: 0.5rem 1.25rem;
+  border: 2px solid var(--lia-consent-placeholder-button-color, #1a1a1a);
+  border-radius: var(--lia-consent-placeholder-button-radius, 0);
+  background: transparent;
+  color: var(--lia-consent-placeholder-button-color, #1a1a1a);
+  font: inherit;
+  cursor: pointer;
+}
+
+.lia-consent-placeholder__button:hover {
+  text-decoration: underline;
+}
+
+.lia-consent-placeholder__button:focus-visible {
+  outline: 3px solid var(--lia-consent-placeholder-focus-color, #005fcc);
+  outline-offset: 3px;
+}
+
+.lia-consent-placeholder__button--accept {
+  background: var(--lia-consent-placeholder-button-color, #1a1a1a);
+  color: var(--lia-consent-placeholder-button-text-color, #fff);
+}

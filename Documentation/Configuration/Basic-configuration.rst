@@ -40,6 +40,7 @@ Now place this code in it and set the constants to your need.
         activate = 0
         tcfEnabled = 0
         useSmartDataProtector = 0
+        useConsentIntegration = 0
         footerLink = 0
         excludedPages =
         whitelistedSDPServices =
@@ -51,6 +52,9 @@ Now place this code in it and set the constants to your need.
 To load Usercentrics, enter your Usercentrics ID in settingsId and set the constant activate to 1.
 If you want to use the Smart Data Protector, set the constant
 the constant useSmartDataProtector to 1.
+To block iframes and custom integrations without the Smart Data Protector, set
+the constant useConsentIntegration to 1, see
+:ref:`consent integration <consent-integration-configuration>`.
 
 
 .. note::

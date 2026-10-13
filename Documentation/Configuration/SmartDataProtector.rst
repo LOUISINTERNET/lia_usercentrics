@@ -7,6 +7,12 @@ Smart Data Protector configuration
 
 You can also configure and restrict the Smart Data Protector.
 
+..  tip::
+    Since version 1.2.0 the
+    :ref:`consent integration <consent-integration-configuration>` can replace
+    the Smart Data Protector. It blocks iframes and custom integrations without
+    reloading the page.
+
 .. seealso::
     `Here <https://docs.usercentrics.com/#/smart-data-protector?id=smart-data-protector>`__ is the official documentation of the Smart Data Protector.
 

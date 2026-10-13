@@ -16,6 +16,8 @@ plugin.tx_liausercentrics {
     tcfEnabled = 0
     # cat=usercentrics/settings/b; type=boolean; label=Smart Data Protector: Activate the integration of the Smart Data Protector.
     useSmartDataProtector = 0
+    # cat=usercentrics/settings/b; type=boolean; label=Consent integration: Block iframes and custom integrations until consent without the Smart Data Protector. Cannot be combined with the Smart Data Protector.
+    useConsentIntegration = 0
     # cat=usercentrics/settings/c; type=boolean; label=Show Usercentrics link in footer
     footerLink = 0
     # cat=usercentrics/settings/d; type=string; label=Page list: On this pages is no Usercentrics integration.

@@ -254,8 +254,8 @@ class UsercentricsService
         return sprintf(
             '<iframe uc-src="%s"%s data-usercentrics="%s"></iframe>',
             htmlspecialchars($src, ENT_QUOTES | ENT_HTML5),
-            empty($attributes) ? '' : ' ' . GeneralUtility::implodeAttributes($tagAttributes),
-            $dataProcessingService
+            empty($tagAttributes) ? '' : ' ' . GeneralUtility::implodeAttributes($tagAttributes, true),
+            htmlspecialchars($dataProcessingService, ENT_QUOTES | ENT_HTML5)
         );
     }
 
