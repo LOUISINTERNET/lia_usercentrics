@@ -109,16 +109,9 @@ class UsercentricsService
     public function isPageExcluded(int $currentPageUid): bool
     {
         $usercentricsSettings = $this->typoscriptReader->getUsercentricsSettings();
-        if (empty($usercentricsSettings['excludeOnPages'])) {
-            return false;
-        }
+        $pageUidList = GeneralUtility::intExplode(',', TypoScriptValue::getString($usercentricsSettings, 'excludedPages'), true);
 
-        $pageUidList = array_filter(GeneralUtility::trimExplode(',', TypoScriptValue::getString($usercentricsSettings, 'excludeOnPages')));
-        if (empty($pageUidList)) {
-            return false;
-        }
-
-        return in_array($currentPageUid, $pageUidList);
+        return in_array($currentPageUid, $pageUidList, true);
     }
 
     /**
@@ -131,16 +124,9 @@ class UsercentricsService
             return true;
         }
 
-        $usercentricsSettings = $this->typoscriptReader->getUsercentricsSettings();
-        if (empty($usercentricsSettings)) {
-            throw new LiaUsercentricsException('The Usercentrics settings are not set.', 1741944668);
-        }
+        $queryParameter = TypoScriptValue::getString($this->typoscriptReader->getUsercentricsConfiguration(), 'ucQueryParameter');
 
-        if (!empty($request->getQueryParams()['uc']) && !empty($usercentricsSettings['ucQueryParameter'])) {
-            return $request->getQueryParams()['uc'] === $usercentricsSettings['ucQueryParameter'];
-        }
-
-        return false;
+        return $queryParameter !== '' && ($request->getQueryParams()['uc'] ?? null) === $queryParameter;
     }
 
     /**
