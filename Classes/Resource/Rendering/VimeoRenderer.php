@@ -17,7 +17,7 @@ class VimeoRenderer extends OriginVimeoRenderer
      * @param FileInterface $file
      * @param int|string $width TYPO3 known format; examples: 220, 200m or 200c
      * @param int|string $height TYPO3 known format; examples: 220, 200m or 200c
-     * @param array $options
+     * @param array<mixed> $options
      *
      * @return string
      */
