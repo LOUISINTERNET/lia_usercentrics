@@ -84,6 +84,10 @@ entries separated by commas. The container gets the attribute
 A blocked iframe outside of a ``data-uc`` container stays empty and shows no
 placeholder.
 
+Put only the embed into the container. The placeholder covers the whole
+container, so text inside it, for example a caption, is hidden while the
+consent is missing. Place captions after the container.
+
 ..  note::
     Children of a custom element with a shadow root and without a slot are not
     rendered. Put ``data-uc`` on a wrapping element, not on the custom element.
