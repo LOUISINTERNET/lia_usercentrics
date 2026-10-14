@@ -24,21 +24,6 @@ use TYPO3\CMS\Frontend\Page\PageInformation;
 class UsercentricsService
 {
     /**
-     * @var PageRenderer $pageRenderer
-     */
-    protected PageRenderer $pageRenderer;
-
-    /**
-     * @var AssetCollector $assetCollector
-     */
-    protected AssetCollector $assetCollector;
-
-    /**
-     * @var ReaderService $typoscriptReader
-     */
-    protected ReaderService $typoscriptReader;
-
-    /**
      * Service constructor
      *
      * @param PageRenderer $pageRenderer
@@ -47,20 +32,11 @@ class UsercentricsService
      * @param EventDispatcher $dispatcher
      */
     public function __construct(
-        PageRenderer $pageRenderer,
-        AssetCollector $assetCollector,
-        ReaderService $typoscriptReader,
+        protected PageRenderer $pageRenderer,
+        protected AssetCollector $assetCollector,
+        protected ReaderService $typoscriptReader,
         private EventDispatcher $dispatcher
-    ) {
-        $request = ServerRequestService::getServerRequest();
-        if (!empty($request)) {
-            if (ApplicationType::fromRequest($request)->isFrontend()) {
-                $this->pageRenderer = $pageRenderer;
-                $this->assetCollector = $assetCollector;
-                $this->typoscriptReader = $typoscriptReader;
-            }
-        }
-    }
+    ) {}
 
     /**
      * Check if the Usercentrics library can be integrated on the current page.
@@ -68,7 +44,7 @@ class UsercentricsService
     public function canBeIntegrated(): bool
     {
         $request = ServerRequestService::getServerRequest();
-        if (empty($request)) {
+        if ($request === null || !ApplicationType::fromRequest($request)->isFrontend()) {
             return false;
         }
 
@@ -77,8 +53,7 @@ class UsercentricsService
             throw new LiaUsercentricsException('The request attribute "frontend.page.information" is missing, the current page cannot be determined.', 1791905168);
         }
 
-        return ApplicationType::fromRequest($request)->isFrontend()
-            && $this->isActive() && !$this->ignoreIntegration() && !$this->isPageExcluded($pageInformation->getId());
+        return $this->isActive() && !$this->ignoreIntegration() && !$this->isPageExcluded($pageInformation->getId());
     }
 
     /**
@@ -309,12 +284,11 @@ class UsercentricsService
      * Add configuration to add Usercentrics to custom services integrations.
      *
      * @param string $overlayIntegration
+     * @throws LiaUsercentricsException
      */
     protected function customOverlayIntegration(string $overlayIntegration): void
     {
-        $customServiceOverlay = $this->buildCustomOverlayJson(
-            GeneralUtility::trimExplode(',', $overlayIntegration, true)
-        );
+        $customServiceOverlay = $this->buildCustomOverlayJson(CustomOverlayIntegration::parse($overlayIntegration));
 
         $this->pageRenderer->addHeaderData('<script type="text/javascript" id="blockElements">uc.blockElements(' . $customServiceOverlay . ');</script>');
     }
@@ -359,18 +333,12 @@ class UsercentricsService
     /**
      * Generate a json for the Usercentrics custom overlay integration by given typoscript configuration.
      *
-     * @param list<string> $customServicesMap
+     * @param array<string, string> $overlays targets of the data-uc attribute by template ID
      */
-    private function buildCustomOverlayJson(array $customServicesMap): string
+    private function buildCustomOverlayJson(array $overlays): string
     {
-        $return = [];
-        foreach ($customServicesMap as $map) {
-            if (strpos($map, ':') > 0) {
-                $serviceMap = GeneralUtility::trimExplode(':', $map);
-                $return[$serviceMap[0]] = '[data-uc="' . $serviceMap[1] . '"]';
-            }
-        }
+        $selectors = array_map(static fn(string $target): string => '[data-uc="' . $target . '"]', $overlays);
 
-        return json_encode($return, JSON_THROW_ON_ERROR);
+        return json_encode($selectors, JSON_THROW_ON_ERROR);
     }
 }

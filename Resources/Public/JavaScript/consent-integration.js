@@ -161,13 +161,22 @@ function handleClick(event) {
     acceptService(templateId)
     return
   }
-  window.__ucCmp.showServiceDetails(templateId)
+  getCmp().showServiceDetails(templateId)
 }
 
 async function acceptService(templateId) {
-  await window.__ucCmp.updateServicesConsents([{ id: templateId, consent: true }])
-  await window.__ucCmp.saveConsents()
-  applyConsent(await window.__ucCmp.getConsentDetails())
+  const cmp = getCmp()
+  await cmp.updateServicesConsents([{ id: templateId, consent: true }])
+  await cmp.saveConsents()
+  applyConsent(await cmp.getConsentDetails())
+}
+
+function getCmp() {
+  if (!window.__ucCmp) {
+    throw new Error(`${LOG_PREFIX} The Usercentrics CMP (window.__ucCmp) is not available.`)
+  }
+
+  return window.__ucCmp
 }
 
 function knownServiceNames() {

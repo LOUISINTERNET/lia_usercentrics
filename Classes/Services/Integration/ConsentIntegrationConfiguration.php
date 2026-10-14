@@ -13,7 +13,6 @@ namespace LIA\LiaUsercentrics\Services\Integration;
 
 use LIA\LiaUsercentrics\Exceptions\LiaUsercentricsException;
 use LIA\LiaUsercentrics\Services\TypoScript\TypoScriptValue;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 final readonly class ConsentIntegrationConfiguration
 {
@@ -44,33 +43,11 @@ final readonly class ConsentIntegrationConfiguration
             }
         }
 
-        return new self(self::parseOverlays(TypoScriptValue::getString($settings, 'customOverlayIntegration')));
+        return new self(CustomOverlayIntegration::parse(TypoScriptValue::getString($settings, 'customOverlayIntegration')));
     }
 
     public function toJson(): string
     {
         return json_encode(['overlays' => (object)$this->overlays], JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR);
-    }
-
-    /**
-     * @return array<string, string>
-     * @throws LiaUsercentricsException
-     */
-    private static function parseOverlays(string $customOverlayIntegration): array
-    {
-        $overlays = [];
-        foreach (GeneralUtility::trimExplode(',', $customOverlayIntegration, true) as $entry) {
-            $parts = GeneralUtility::trimExplode(':', $entry);
-            if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
-                throw new LiaUsercentricsException(
-                    sprintf('The entry "%s" in the constant "customOverlayIntegration" is not valid, expected "<TemplateID>:<target>".', $entry),
-                    1791905587
-                );
-            }
-
-            $overlays[$parts[0]] = $parts[1];
-        }
-
-        return $overlays;
     }
 }

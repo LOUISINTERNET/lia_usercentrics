@@ -25,7 +25,7 @@ class YouTubeRenderer extends OriginYouTubeRenderer
     {
         $options = $this->collectOptions($options, $file);
         $integrationService = GeneralUtility::makeInstance(UsercentricsService::class);
-        if ($integrationService->isActive()) {
+        if ($integrationService->canBeIntegrated()) {
             $src = $this->createYouTubeUrl($options, $file);
             $attributes = $this->collectIframeAttributes($width, $height, $options);
 

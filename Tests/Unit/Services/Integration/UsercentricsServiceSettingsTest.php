@@ -80,12 +80,24 @@ final class UsercentricsServiceSettingsTest extends UnitTestCase
         self::assertSame($expected, $subject->ignoreIntegration());
     }
 
+    #[Test]
+    public function canBeIntegratedReturnsFalseInTheBackendWithoutPageInformation(): void
+    {
+        $subject = $this->createSubject(
+            ['settings.' => ['active' => '1']],
+            new ServerRequest('https://example.com/typo3/module/web/info'),
+            SystemEnvironmentBuilder::REQUESTTYPE_BE
+        );
+
+        self::assertFalse($subject->canBeIntegrated());
+    }
+
     /**
      * @param array<string, mixed> $pluginTypoScript
      */
-    private function createSubject(array $pluginTypoScript, ServerRequestInterface $request): UsercentricsService
+    private function createSubject(array $pluginTypoScript, ServerRequestInterface $request, int $applicationType = SystemEnvironmentBuilder::REQUESTTYPE_FE): UsercentricsService
     {
-        $GLOBALS['TYPO3_REQUEST'] = $request->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_FE);
+        $GLOBALS['TYPO3_REQUEST'] = $request->withAttribute('applicationType', $applicationType);
 
         $configurationManager = new class (['plugin.' => ['tx_liausercentrics.' => $pluginTypoScript]]) implements ConfigurationManagerInterface {
             /**

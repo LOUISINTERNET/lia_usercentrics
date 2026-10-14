@@ -28,6 +28,10 @@ Configuration
 
         Learn how-to block javascript.
 
+    .. card:: :ref:`Events <events>`
+
+        Extend the integration with PSR-14 events.
+
 
 ..  toctree::
     :titlesonly:
@@ -37,3 +41,4 @@ Configuration
     SmartDataProtector
     ConsentIntegration
     BlockJavaScript
+    Events

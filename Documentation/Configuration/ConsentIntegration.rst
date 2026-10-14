@@ -56,9 +56,10 @@ Markup
 Iframes
 -------
 
-The YouTube and Vimeo renderers of this extension output the blocked markup.
-Other iframes use the same attributes: ``uc-src`` instead of ``src`` and the
-service name from Usercentrics in ``data-usercentrics``.
+The YouTube and Vimeo renderers of this extension output the blocked markup
+with the service names ``YouTube Video`` and ``Vimeo``. Other iframes use the
+same attributes: ``uc-src`` instead of ``src`` and the service name from
+Usercentrics in ``data-usercentrics``.
 
 ..  code-block:: html
 
@@ -70,7 +71,25 @@ service name from Usercentrics in ``data-usercentrics``.
 With consent, the iframe gets its ``src``. The value of ``data-usercentrics``
 must match the service name in the Usercentrics admin interface. An unknown
 name keeps the iframe blocked and writes an error with the list of known
-services to the browser console.
+services to the browser console. For the renderers of this extension, name the
+services ``YouTube Video`` and ``Vimeo`` in Usercentrics.
+
+On pages without Usercentrics, for example pages in ``excludedPages`` or
+requests with the ``ucQueryParameter``, the renderers output the regular
+iframe with ``src``.
+
+In Fluid, wrap the media ViewHelper into the container and place the caption
+after it:
+
+..  code-block:: html
+    :caption: EXT:site_package/Resources/Private/Extensions/News/Partials/Detail/MediaVideo.html
+
+    <div class="video" data-uc="youtube">
+        <f:media file="{mediaElement}" width="560" height="315"/>
+    </div>
+    <f:if condition="{mediaElement.description}">
+        <p class="video__caption">{mediaElement.description}</p>
+    </f:if>
 
 Placeholder containers
 ----------------------
@@ -78,7 +97,11 @@ Placeholder containers
 A container with ``data-uc`` shows a placeholder while the consent is
 missing. The constant ``customOverlayIntegration`` maps the template ID of the
 service to the value of ``data-uc``: ``<TemplateID>:<target>``, several
-entries separated by commas. The container gets the attribute
+entries separated by commas. The template ID is shown in the details of the
+service in the Usercentrics admin interface, the JavaScript API uses the same
+ID. Template ID and target may contain the characters
+``A-Z``, ``a-z``, ``0-9``, ``_`` and ``-``. An invalid entry throws an
+exception. The container gets the attribute
 ``data-lia-consent="blocked"`` or ``data-lia-consent="granted"``.
 
 A blocked iframe outside of a ``data-uc`` container stays empty and shows no
@@ -115,33 +138,72 @@ custom element.
     change of this service. Returns a function that removes the listener.
 
 Event ``lia-usercentrics:consent``
-    Is dispatched on ``document`` after every change.
+    Is dispatched on ``document`` when the CMP reports the first consent state
+    and after every change.
     ``event.detail.services`` maps every template ID to ``true`` or
     ``false``.
 
 The module is a deferred module script. Code that can run earlier checks if
-``window.liaUsercentrics`` exists and otherwise waits for the event.
+``window.liaUsercentrics`` exists and otherwise waits for the event. Use
+``subscribe()`` to wait for the consent: only a listener that received
+``true`` marks the service as used, see :ref:`consent-integration-revocation`.
 
-..  code-block:: javascript
+This reference implementation for TypeScript projects, for example Nuxt,
+contains the types of the API and a function that waits for the consent:
 
-    function whenGranted(templateId) {
+..  code-block:: typescript
+    :caption: nuxt/composables/Consent/useServiceConsent.ts
+
+    const CONSENT_EVENT = 'lia-usercentrics:consent'
+
+    export interface LiaUsercentricsApi {
+      isGranted: (templateId: string) => boolean | null
+      subscribe: (templateId: string, listener: (isGranted: boolean) => void) => () => void
+    }
+
+    declare global {
+      interface Window {
+        liaUsercentrics?: LiaUsercentricsApi
+      }
+    }
+
+    function readApi(): LiaUsercentricsApi {
+      const api = window.liaUsercentrics
+      if (api === undefined) {
+        throw new Error(`window.liaUsercentrics is missing although "${CONSENT_EVENT}" was dispatched`)
+      }
+
+      return api
+    }
+
+    export function waitForConsent(templateId: string): Promise<void> {
       return new Promise((resolve) => {
-        if (window.liaUsercentrics?.isGranted(templateId) === true) {
-          resolve()
+        const subscribe = () => {
+          readApi().subscribe(templateId, (isGranted) => {
+            if (isGranted) {
+              resolve()
+            }
+          })
+        }
+
+        if (window.liaUsercentrics !== undefined) {
+          subscribe()
           return
         }
-
-        const onConsent = (event) => {
-          if (event.detail.services[templateId] === true) {
-            document.removeEventListener('lia-usercentrics:consent', onConsent)
-            resolve()
-          }
-        }
-        document.addEventListener('lia-usercentrics:consent', onConsent)
+        document.addEventListener(CONSENT_EVENT, subscribe, { once: true })
       })
     }
 
-    whenGranted('S1pcEj_jZX').then(() => initMap())
+Usage, for example before a Google map is initialized:
+
+..  code-block:: typescript
+
+    await waitForConsent('S1pcEj_jZX')
+    initMap()
+
+In plain JavaScript, remove the types.
+
+..  _consent-integration-revocation:
 
 Revocation
 ==========
@@ -227,7 +289,9 @@ Migration from the Smart Data Protector
     to a wrapping element.
 #.  Remove calls of the Smart Data Protector object ``uc`` from your code, for
     example ``uc.reloadOnOptIn()``. The object does not exist without the
-    Smart Data Protector.
+    Smart Data Protector. Check listeners of the
+    :ref:`AddCustomLibrarySettingsEvent <events>` as well, they often add
+    such calls.
 #.  Test every page type without consent, after consent and after a
     revocation. Check the browser console for messages that start with
     ``[lia-usercentrics]``.

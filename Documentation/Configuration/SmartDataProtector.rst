@@ -23,8 +23,9 @@ The Smart Data Protector scans for integrated services each time a page is calle
 the cookie for this service is not set. To limit the list of services, you can enter the Template IDs in the constant `whitelistedSDPServices` separated by a comma.
 
 .. warning::
-    The settings `whitelistedSDPServices`, `customOverlayIntegration`, `reloadOnOptIn` and `reloadOnOptOut`
-    are only applied when `useSmartDataProtector = 1`. Otherwise, the settings are ignored.
+    The settings `whitelistedSDPServices`, `reloadOnOptIn` and `reloadOnOptOut` are only applied when
+    `useSmartDataProtector = 1`. `customOverlayIntegration` is applied with the Smart Data Protector or with the
+    :ref:`consent integration <consent-integration-configuration>`. Otherwise, the settings are ignored.
 
 You can find the template IDs when configuring the services in Usercentrics.
 
@@ -59,6 +60,7 @@ If you integrate a service using your own logic, e.g. your own JavaScript, you c
 the service is displayed and configure this in the TypoScript. The overlay is then inserted by the Smart Data Protector.
 
 Add this attribute `data-uc=“gMaps”` to the container and enter the Template Id of the service followed by a colon and the value of the data attribute. `S1pcEj_jZX:gMaps`.
+Template Id and value may contain the characters `A-Z`, `a-z`, `0-9`, `_` and `-`. An invalid entry throws an exception.
 You can add several configurations here. These only need to be separated by a comma.
 
 .. code-block:: typoscript

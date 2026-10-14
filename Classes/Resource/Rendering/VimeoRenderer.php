@@ -25,7 +25,7 @@ class VimeoRenderer extends OriginVimeoRenderer
     {
         $options = $this->collectOptions($options, $file);
         $integrationService = GeneralUtility::makeInstance(UsercentricsService::class);
-        if ($integrationService->isActive()) {
+        if ($integrationService->canBeIntegrated()) {
             $src = $this->createVimeoUrl($options, $file);
             $attributes = $this->collectIframeAttributes($width, $height, $options);
 
