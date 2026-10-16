@@ -6,3 +6,5 @@ services:
 
   LIA\LiaUsercentrics\:
     resource: '../Classes/*'
+    exclude:
+      - '../Classes/Services/Integration/ConsentIntegrationConfiguration.php'

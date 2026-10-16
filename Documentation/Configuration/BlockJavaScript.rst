@@ -15,12 +15,12 @@ To load this file add an import in it.
 Blocking of files
 =================
 
-In this example you can see a configuration of an inline JavaScript for the integration of the Google tag manager.
+In this example you can see a configuration of a JavaScript file for the integration of the Google tag manager.
 
 .. code-block:: typoscript
     :caption: EXT:site_package/Configuration/TypoScript/Extensions/LiaUsercentrics/Setup.typoscript
 
-    plugin.tx_liausercentrics.jsFile {
+    plugin.tx_liausercentrics.jsFiles {
         10 {
             file = EXT:yourext/Resources/Public/JavaScript/GoogleTagManagerIntegration.js
             dataProcessingService = Google Tag Manager
@@ -34,9 +34,9 @@ However, this should also be emptied afterwards so that you do not have a duplic
 .. code-block:: typoscript
     :caption: EXT:site_package/Configuration/TypoScript/Extensions/LiaUsercentrics/Setup.typoscript
 
-    plugin.tx_liausercentrics.jsFile {
+    plugin.tx_liausercentrics.jsFiles {
         10 {
-            fiel < page.includeJS.googleTagManager
+            file < page.includeJS.googleTagManager
             dataProcessingService = Google Tag Manager
         }
     }
@@ -102,11 +102,11 @@ However, this should also be emptied afterwards so that you do not have a duplic
 
     plugin.tx_liausercentrics.jsInline {
         10 {
-            value < page.FooterData.googleTagManager.value
+            value < page.footerData.googleTagManager.value
             dataProcessingService = Google Tag Manager
         }
     }
 
     [usercentricsIsActive('{$plugin.tx_liausercentrics.settings.activate}', '{$plugin.tx_liausercentrics.settingsId}')]
-        page.FooterData.googleTagManager >
+        page.footerData.googleTagManager >
     [global]

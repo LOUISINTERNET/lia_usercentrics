@@ -9,12 +9,16 @@ plugin.tx_liausercentrics {
     async = {$plugin.tx_liausercentrics.settings.async}
     tcfEnabled = {$plugin.tx_liausercentrics.settings.tcfEnabled}
     useSmartDataProtector = {$plugin.tx_liausercentrics.settings.useSmartDataProtector}
+    useConsentIntegration = {$plugin.tx_liausercentrics.settings.useConsentIntegration}
     footerLink = {$plugin.tx_liausercentrics.settings.footerLink}
     excludedPages = {$plugin.tx_liausercentrics.settings.excludedPages}
     whitelistedSDPServices = {$plugin.tx_liausercentrics.settings.whitelistedSDPServices}
     customOverlayIntegration = {$plugin.tx_liausercentrics.settings.customOverlayIntegration}
     reloadOnOptIn = {$plugin.tx_liausercentrics.settings.reloadOnOptIn}
     reloadOnOptOut = {$plugin.tx_liausercentrics.settings.reloadOnOptOut}
+  }
+  view {
+    templateRootPaths.0 = EXT:lia_usercentrics/Resources/Private/Templates/
   }
 }
 

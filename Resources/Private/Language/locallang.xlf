@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+	<file source-language="en" datatype="plaintext" original="EXT:lia_usercentrics/Resources/Private/Language/locallang.xlf" date="2026-10-13T17:40:00Z" product-name="lia_usercentrics">
+		<header/>
+		<body>
+			<trans-unit id="placeholder.text" resname="placeholder.text">
+				<source>We need your consent to show this content. Loading it transfers data to this provider.</source>
+			</trans-unit>
+			<trans-unit id="placeholder.accept" resname="placeholder.accept">
+				<source>Accept</source>
+			</trans-unit>
+			<trans-unit id="placeholder.details" resname="placeholder.details">
+				<source>Learn more</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>

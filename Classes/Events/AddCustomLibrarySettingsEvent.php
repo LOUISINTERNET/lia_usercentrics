@@ -20,10 +20,13 @@ final class AddCustomLibrarySettingsEvent
     protected AssetCollector $assetCollector;
 
     /**
-     * @var array $usercentricsSettings
+     * @var array<mixed> $usercentricsSettings
      */
     private array $usercentricsSettings;
 
+    /**
+     * @param array<mixed> $usercentricsSettings
+     */
     public function __construct(PageRenderer $pageRenderer, AssetCollector $assetCollector, array $usercentricsSettings = [])
     {
         $this->pageRenderer = $pageRenderer;
@@ -69,6 +72,8 @@ final class AddCustomLibrarySettingsEvent
 
     /**
      * Get $usercentricsSettings
+     *
+     * @return array<mixed>
      */
     public function getUsercentricsSettings(): array
     {

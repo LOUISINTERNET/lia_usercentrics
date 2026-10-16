@@ -6,14 +6,17 @@ namespace LIA\LiaUsercentrics\Services\Integration;
 
 use LIA\LiaUsercentrics\Events\AddCustomLibrarySettingsEvent;
 use LIA\LiaUsercentrics\Exceptions\LiaUsercentricsException;
+use LIA\LiaUsercentrics\Middleware\BypassCacheMiddleware;
 use LIA\LiaUsercentrics\Services\Request\ServerRequestService;
 use LIA\LiaUsercentrics\Services\TypoScript\ReaderService;
+use LIA\LiaUsercentrics\Services\TypoScript\TypoScriptValue;
 use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
 use TYPO3\CMS\Core\Http\ApplicationType;
 use TYPO3\CMS\Core\Page\AssetCollector;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\StringUtility;
+use TYPO3\CMS\Frontend\Page\PageInformation;
 
 /**
  * This class provide function for the integration of the Usercentrics library and the
@@ -22,43 +25,21 @@ use TYPO3\CMS\Core\Utility\StringUtility;
 class UsercentricsService
 {
     /**
-     * @var PageRenderer $pageRenderer
-     */
-    protected PageRenderer $pageRenderer;
-
-    /**
-     * @var AssetCollector $assetCollector
-     */
-    protected AssetCollector $assetCollector;
-
-    /**
-     * @var ReaderService $typoscriptReader
-     */
-    protected ReaderService $typoscriptReader;
-
-    /**
      * Service constructor
      *
      * @param PageRenderer $pageRenderer
      * @param AssetCollector $assetCollector
      * @param ReaderService $typoscriptReader
      * @param EventDispatcher $dispatcher
+     * @param ConsentIntegrationRenderer $consentIntegrationRenderer
      */
     public function __construct(
-        PageRenderer $pageRenderer,
-        AssetCollector $assetCollector,
-        ReaderService $typoscriptReader,
-        private EventDispatcher $dispatcher
-    ) {
-        $request = ServerRequestService::getServerRequest();
-        if (!empty($request)) {
-            if (ApplicationType::fromRequest($request)->isFrontend()) {
-                $this->pageRenderer = $pageRenderer;
-                $this->assetCollector = $assetCollector;
-                $this->typoscriptReader = $typoscriptReader;
-            }
-        }
-    }
+        protected PageRenderer $pageRenderer,
+        protected AssetCollector $assetCollector,
+        protected ReaderService $typoscriptReader,
+        private EventDispatcher $dispatcher,
+        private ConsentIntegrationRenderer $consentIntegrationRenderer
+    ) {}
 
     /**
      * Check if the Usercentrics library can be integrated on the current page.
@@ -66,13 +47,32 @@ class UsercentricsService
     public function canBeIntegrated(): bool
     {
         $request = ServerRequestService::getServerRequest();
-        if (empty($request)) {
+        if ($request === null || !ApplicationType::fromRequest($request)->isFrontend()) {
             return false;
         }
 
-        $currentPageUid = $request->getAttribute('frontend.page.information')->getId();
-        return ApplicationType::fromRequest($request)->isFrontend()
-            && $this->isActive() && !$this->ignoreIntegration() && !$this->isPageExcluded($currentPageUid);
+        $pageInformation = $request->getAttribute('frontend.page.information');
+        if (!$pageInformation instanceof PageInformation) {
+            throw new LiaUsercentricsException('The request attribute "frontend.page.information" is missing, the current page cannot be determined.', 1791905168);
+        }
+
+        return $this->isActive() && !$this->ignoreIntegration() && !$this->isPageExcluded($pageInformation->getId());
+    }
+
+    /**
+     * Check if iframes have to be rendered with uc-src. Only the Smart Data Protector or the consent integration
+     * turn uc-src into src, without one of them the iframes would never load.
+     *
+     * @throws LiaUsercentricsException
+     */
+    public function blocksIframes(): bool
+    {
+        if (!$this->canBeIntegrated()) {
+            return false;
+        }
+
+        return !empty($this->typoscriptReader->getUsercentricsSettings()['useSmartDataProtector'])
+            || $this->consentIntegrationRenderer->isEnabled();
     }
 
     /**
@@ -87,11 +87,12 @@ class UsercentricsService
 
         $usercentricsSettings = $this->typoscriptReader->getUsercentricsSettings();
 
-        if (!in_array($usercentricsSettings['active'], ['0', '1'])) {
+        $active = TypoScriptValue::getString($usercentricsSettings, 'active');
+        if (!in_array($active, ['0', '1'], true)) {
             throw new LiaUsercentricsException('The value of the constant active is not valid. It can be only 0 or 1.', 1740575107);
         }
 
-        return (bool)$usercentricsSettings['active'];
+        return $active === '1';
     }
 
     /**
@@ -102,16 +103,9 @@ class UsercentricsService
     public function isPageExcluded(int $currentPageUid): bool
     {
         $usercentricsSettings = $this->typoscriptReader->getUsercentricsSettings();
-        if (empty($usercentricsSettings['excludeOnPages'])) {
-            return false;
-        }
+        $pageUidList = GeneralUtility::intExplode(',', TypoScriptValue::getString($usercentricsSettings, 'excludedPages'), true);
 
-        $pageUidList = array_filter(GeneralUtility::trimExplode(',', $usercentricsSettings['excludeOnPages']));
-        if (empty($pageUidList)) {
-            return false;
-        }
-
-        return in_array($currentPageUid, $pageUidList);
+        return in_array($currentPageUid, $pageUidList, true);
     }
 
     /**
@@ -124,16 +118,9 @@ class UsercentricsService
             return true;
         }
 
-        $usercentricsSettings = $this->typoscriptReader->getUsercentricsSettings();
-        if (empty($usercentricsSettings)) {
-            throw new LiaUsercentricsException('The Usercentrics settings are not set.', 1741944668);
-        }
+        $queryParameter = TypoScriptValue::getString($this->typoscriptReader->getUsercentricsConfiguration(), 'ucQueryParameter');
 
-        if (!empty($request->getQueryParams()['uc']) && !empty($usercentricsSettings['ucQueryParameter'])) {
-            return $request->getQueryParams()['uc'] === $usercentricsSettings['ucQueryParameter'];
-        }
-
-        return false;
+        return $queryParameter !== '' && ($request->getQueryParams()[BypassCacheMiddleware::QUERY_PARAMETER] ?? null) === $queryParameter;
     }
 
     /**
@@ -145,29 +132,29 @@ class UsercentricsService
     {
         $usercentricsConfig = $this->typoscriptReader->getUsercentricsConfiguration();
 
-        $settingsId = $usercentricsConfig['settingsId'];
-        $language = $usercentricsConfig['language'];
-        $srcUrl = $usercentricsConfig['srcUrl'];
-        $useSDP = $usercentricsConfig['settings']['useSmartDataProtector'] ?? false;
-        $async = (bool) $usercentricsConfig['settings']['async'] ?? false;
-        $tcfEnabled = (bool) ($usercentricsConfig['settings']['tcfEnabled'] ?? false);
+        $settings = TypoScriptValue::getArray($usercentricsConfig, 'settings');
+
+        $settingsId = TypoScriptValue::getString($usercentricsConfig, 'settingsId');
+        $language = TypoScriptValue::getString($usercentricsConfig, 'language');
+        $srcUrl = TypoScriptValue::getString($usercentricsConfig, 'srcUrl');
+        $useSDP = !empty($settings['useSmartDataProtector']);
+        $async = !empty($settings['async']);
+        $tcfEnabled = !empty($settings['tcfEnabled']);
 
         if (empty($srcUrl) || empty($language) || empty($settingsId)) {
             throw new LiaUsercentricsException('Your Usercentrics configuration is not valid. Please make sure that the srcUrl, settingsId and language constants are set.', 1740655898);
         }
 
-        if (!empty($srcUrl) && !empty($language) && !empty($settingsId)) {
+        $this->pageRenderer->addHeaderData(
+            '<script id="usercentrics-cmp" src="' . $srcUrl . '" data-settings-id="' . $settingsId . '" data-language="' . $language . '"'
+            . ($tcfEnabled ? ' data-tcf-enabled' : '')
+            . ($async ? ' async' : '')
+            . '></script>'
+        );
+        if ($useSDP) {
             $this->pageRenderer->addHeaderData(
-                '<script id="usercentrics-cmp" src="' . $srcUrl . '" data-settings-id="' . $settingsId . '" data-language="' . $language . '"'
-                . ($tcfEnabled ? ' data-tcf-enabled' : '')
-                . ($async ? ' async' : '')
-                . '></script>'
+                '<script type="application/javascript" id="usercentrics-smart-data-protector" src="https://privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js"></script>'
             );
-            if ($useSDP) {
-                $this->pageRenderer->addHeaderData(
-                    '<script type="application/javascript" id="usercentrics-smart-data-protector" src="https://privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js"></script>'
-                );
-            }
         }
     }
 
@@ -180,15 +167,13 @@ class UsercentricsService
     {
         $usercentricsConfig = $this->typoscriptReader->getUsercentricsConfiguration();
 
-        if (!empty($usercentricsConfig['jsInline'])) {
-            foreach ($usercentricsConfig['jsInline'] as $index => $inLineItem) {
-                if (!$this->isJsConfigurationValid($inLineItem)) {
-                    throw new LiaUsercentricsException('The inline javascript configuration for the index "' . $index . '" is not valid.', 1740577586);
-                }
-
-                [$identifier, $attributes, $options] = $this->getTagData($inLineItem);
-                $this->assetCollector->addInlineJavaScript($identifier, $inLineItem['value'], $attributes, $options);
+        foreach (TypoScriptValue::getArray($usercentricsConfig, 'jsInline') as $index => $inLineItem) {
+            if (!is_array($inLineItem) || !$this->isJsConfigurationValid($inLineItem)) {
+                throw new LiaUsercentricsException('The inline javascript configuration for the index "' . $index . '" is not valid.', 1740577586);
             }
+
+            [$identifier, $attributes, $options] = $this->getTagData($inLineItem);
+            $this->assetCollector->addInlineJavaScript($identifier, TypoScriptValue::getString($inLineItem, 'value'), $attributes, $options);
         }
     }
 
@@ -201,15 +186,13 @@ class UsercentricsService
     {
         $usercentricsConfig = $this->typoscriptReader->getUsercentricsConfiguration();
 
-        if (!empty($usercentricsConfig['jsFiles'])) {
-            foreach ($usercentricsConfig['jsFiles'] as $index => $file) {
-                if (!$this->isJsConfigurationValid($file, true)) {
-                    throw new LiaUsercentricsException("The JavaScript file configuration in the index '" . $index . "' is not valid", 1740636489);
-                }
-
-                [$identifier, $attributes, $options] = $this->getTagData($file);
-                $this->assetCollector->addJavaScript($identifier, $file['file'], $attributes, $options);
+        foreach (TypoScriptValue::getArray($usercentricsConfig, 'jsFiles') as $index => $file) {
+            if (!is_array($file) || !$this->isJsConfigurationValid($file, true)) {
+                throw new LiaUsercentricsException("The JavaScript file configuration in the index '" . $index . "' is not valid", 1740636489);
             }
+
+            [$identifier, $attributes, $options] = $this->getTagData($file);
+            $this->assetCollector->addJavaScript($identifier, TypoScriptValue::getString($file, 'file'), $attributes, $options);
         }
     }
 
@@ -221,20 +204,24 @@ class UsercentricsService
         $usercentricsSettings = $this->typoscriptReader->getUsercentricsSettings();
 
         if (!empty($usercentricsSettings['useSmartDataProtector'])) {
-            if (!empty($usercentricsSettings['whitelistedSDPServices'])) {
-                $this->addBlockOnlyInlineScript($usercentricsSettings['whitelistedSDPServices']);
+            $whitelistedServices = TypoScriptValue::getString($usercentricsSettings, 'whitelistedSDPServices');
+            if (!empty($whitelistedServices)) {
+                $this->addBlockOnlyInlineScript($whitelistedServices);
             }
 
-            if (!empty($usercentricsSettings['customOverlayIntegration'])) {
-                $this->customOverlayIntegration($usercentricsSettings['customOverlayIntegration']);
+            $overlayIntegration = TypoScriptValue::getString($usercentricsSettings, 'customOverlayIntegration');
+            if (!empty($overlayIntegration)) {
+                $this->customOverlayIntegration($overlayIntegration);
             }
 
-            if (!empty($usercentricsSettings['reloadOnOptIn'])) {
-                $this->addReloadOnOptInOrOutConfiguration($usercentricsSettings['reloadOnOptIn']);
+            $reloadOnOptIn = TypoScriptValue::getString($usercentricsSettings, 'reloadOnOptIn');
+            if (!empty($reloadOnOptIn)) {
+                $this->addReloadOnOptInOrOutConfiguration($reloadOnOptIn);
             }
 
-            if (!empty($usercentricsSettings['reloadOnOptOut'])) {
-                $this->addReloadOnOptInOrOutConfiguration($usercentricsSettings['reloadOnOptOut'], 'reloadOnOptOut');
+            $reloadOnOptOut = TypoScriptValue::getString($usercentricsSettings, 'reloadOnOptOut');
+            if (!empty($reloadOnOptOut)) {
+                $this->addReloadOnOptInOrOutConfiguration($reloadOnOptOut, 'reloadOnOptOut');
             }
         }
 
@@ -253,7 +240,7 @@ class UsercentricsService
      * Modify the iframe tag string to block the service.
      *
      * @param string $src
-     * @param array $tagAttributes
+     * @param array<string, string|int> $tagAttributes
      * @param string $dataProcessingService
      */
     public function getModifiedIframeIntegration(string $src, array $tagAttributes, string $dataProcessingService): string
@@ -261,8 +248,8 @@ class UsercentricsService
         return sprintf(
             '<iframe uc-src="%s"%s data-usercentrics="%s"></iframe>',
             htmlspecialchars($src, ENT_QUOTES | ENT_HTML5),
-            empty($attributes) ? '' : ' ' . GeneralUtility::implodeAttributes($tagAttributes),
-            $dataProcessingService
+            empty($tagAttributes) ? '' : ' ' . GeneralUtility::implodeAttributes($tagAttributes, true),
+            htmlspecialchars($dataProcessingService, ENT_QUOTES | ENT_HTML5)
         );
     }
 
@@ -270,38 +257,27 @@ class UsercentricsService
      * Check the typoscript configuration of the javascript files or inline configuration.
      * It does not check the content of the configuration.
      *
-     * @param array $jsConf
+     * @param array<mixed> $jsConf
      * @param bool $isFile
      */
     protected function isJsConfigurationValid(array $jsConf, bool $isFile = false): bool
     {
-        $dataProcessingService = $jsConf['dataProcessingService'];
-
-        if ($isFile) {
-            $file = $jsConf['file'];
-            if (
-                !empty($file)
-                && str_starts_with('EXT:', $file)
-                && file_exists(GeneralUtility::getFileAbsFileName($file))
-                && isset($dataProcessingService)
-                && is_string($dataProcessingService)
-            ) {
-                return true;
-            }
-            if (!empty($file) && filter_var($file, FILTER_VALIDATE_URL) && isset($dataProcessingService) && is_string($dataProcessingService)) {
-                return true;
-            }
-
-            return isset($file) && is_string($file) && isset($dataProcessingService) && is_string($dataProcessingService);
+        if (!is_string($jsConf['dataProcessingService'] ?? null)) {
+            return false;
         }
 
-        return !empty($jsConf['value']) && isset($dataProcessingService) && is_string($dataProcessingService);
+        if ($isFile) {
+            return is_string($jsConf['file'] ?? null);
+        }
+
+        return !empty($jsConf['value']) && is_string($jsConf['value']);
     }
 
     /**
      * Convert the priority value to an boolean.
      *
-     * @param array $options
+     * @param array<mixed> $options
+     * @return array<mixed>
      */
     protected function convertPriorityToBoolean(array $options): array
     {
@@ -327,12 +303,11 @@ class UsercentricsService
      * Add configuration to add Usercentrics to custom services integrations.
      *
      * @param string $overlayIntegration
+     * @throws LiaUsercentricsException
      */
     protected function customOverlayIntegration(string $overlayIntegration): void
     {
-        $customServiceOverlay = $this->buildCustomOverlayJson(
-            GeneralUtility::trimExplode(',', $overlayIntegration, true)
-        );
+        $customServiceOverlay = $this->buildCustomOverlayJson(CustomOverlayIntegration::parse($overlayIntegration));
 
         $this->pageRenderer->addHeaderData('<script type="text/javascript" id="blockElements">uc.blockElements(' . $customServiceOverlay . ');</script>');
     }
@@ -352,23 +327,24 @@ class UsercentricsService
             $functionCallList[] = 'uc.' . $functionName . '(\'' . $id . '\')';
         }
 
-        $this->pageRenderer->addHeaderData("<script type='text/javascript' id='uc-" . $functionName . "'>" . implode(';', $functionCallList) . "</script>");
+        $this->pageRenderer->addHeaderData("<script type='text/javascript' id='uc-" . $functionName . "'>" . implode(';', $functionCallList) . '</script>');
     }
 
     /**
      * Get the needed data for the integration of the configured javascript data.
      *
-     * @param array $jsConf
+     * @param array<mixed> $jsConf
+     * @return array{string, array<string, string>, array<mixed>}
      */
     private function getTagData(array $jsConf): array
     {
-        $dataProcessingService = $jsConf['dataProcessingService'];
+        $dataProcessingService = TypoScriptValue::getString($jsConf, 'dataProcessingService');
         $identifier = StringUtility::getUniqueId($dataProcessingService . '-');
         $attributes = [
             'type' => 'text/plain',
             'data-usercentrics' => $dataProcessingService,
         ];
-        $options = $this->convertPriorityToBoolean($jsConf['options'] ?? []);
+        $options = $this->convertPriorityToBoolean(TypoScriptValue::getArray($jsConf, 'options'));
 
         return [$identifier, $attributes, $options];
     }
@@ -376,18 +352,12 @@ class UsercentricsService
     /**
      * Generate a json for the Usercentrics custom overlay integration by given typoscript configuration.
      *
-     * @param array $customServicesMap
+     * @param array<string, string> $overlays targets of the data-uc attribute by template ID
      */
-    private function buildCustomOverlayJson(array $customServicesMap): string
+    private function buildCustomOverlayJson(array $overlays): string
     {
-        $return = [];
-        foreach ($customServicesMap as $map) {
-            if (strpos($map, ':') > 0) {
-                $serviceMap = GeneralUtility::trimExplode(':', $map);
-                $return[$serviceMap[0]] = '[data-uc="' . $serviceMap[1] . '"]';
-            }
-        }
+        $selectors = array_map(static fn(string $target): string => '[data-uc="' . $target . '"]', $overlays);
 
-        return json_encode($return);
+        return json_encode($selectors, JSON_THROW_ON_ERROR);
     }
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace LIA\LiaUsercentrics\Services\Request;
 
 use LIA\LiaUsercentrics\Events\GetServerRequestEvent;
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\EventDispatcher\EventDispatcher;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -14,17 +14,16 @@ final class ServerRequestService
     /**
      * Get the ServerRequest.
      */
-    public static function getServerRequest(): ?RequestInterface
+    public static function getServerRequest(): ?ServerRequestInterface
     {
-        $requestInterface = $GLOBALS['TYPO3_REQUEST'];
-
-        if (empty($requestInterface)) {
-            $eventDispatcher = GeneralUtility::makeInstance(EventDispatcher::class);
-            $event = new GetServerRequestEvent($requestInterface);
-            $eventDispatcher->dispatch($event);
-            $requestInterface = $event->getRequest();
+        $request = $GLOBALS['TYPO3_REQUEST'] ?? null;
+        if ($request instanceof ServerRequestInterface) {
+            return $request;
         }
 
-        return $requestInterface ?? null;
+        $event = new GetServerRequestEvent(null);
+        GeneralUtility::makeInstance(EventDispatcher::class)->dispatch($event);
+
+        return $event->getRequest();
     }
 }

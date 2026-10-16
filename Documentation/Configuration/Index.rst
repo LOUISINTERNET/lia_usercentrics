@@ -20,9 +20,17 @@ Configuration
 
         Here you find the configuration for the Smart Data Protector.
 
+    .. card:: :ref:`Consent integration <consent-integration-configuration>`
+
+        Block iframes and custom integrations without the Smart Data Protector.
+
     .. card:: :ref:`JavaScript configuration <block-javaScript>`
 
         Learn how-to block javascript.
+
+    .. card:: :ref:`Events <events>`
+
+        Extend the integration with PSR-14 events.
 
 
 ..  toctree::
@@ -31,4 +39,6 @@ Configuration
 
     Basic-configuration
     SmartDataProtector
+    ConsentIntegration
     BlockJavaScript
+    Events

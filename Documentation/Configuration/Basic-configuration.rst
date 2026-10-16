@@ -38,8 +38,10 @@ Now place this code in it and set the constants to your need.
       ucQueryParameter =
       settings {
         activate = 0
+        async = 0
         tcfEnabled = 0
         useSmartDataProtector = 0
+        useConsentIntegration = 0
         footerLink = 0
         excludedPages =
         whitelistedSDPServices =
@@ -50,13 +52,51 @@ Now place this code in it and set the constants to your need.
 
 To load Usercentrics, enter your Usercentrics ID in settingsId and set the constant activate to 1.
 If you want to use the Smart Data Protector, set the constant
-the constant useSmartDataProtector to 1.
+useSmartDataProtector to 1.
+To block iframes and custom integrations without the Smart Data Protector, set
+the constant useConsentIntegration to 1, see
+:ref:`consent integration <consent-integration-configuration>`.
 
 
 .. note::
   The Smart Data Protector scans your system for known services
   and blocks them automatically. It also offers the option of using the overlays from Usercentrics. So you don't have to build your own.
 
+
+Exclude pages
+~~~~~~~~~~~~~
+
+..  versionchanged:: 1.2.0
+    Before version 1.2.0, ``excludedPages`` and ``ucQueryParameter`` had no
+    effect. Check both constants when you update an existing project.
+
+Enter a comma separated list of page UIDs in ``excludedPages`` to render these
+pages without Usercentrics. The pages render YouTube and Vimeo videos as
+regular iframes.
+
+Set ``ucQueryParameter`` to a value to render a page without Usercentrics when
+the URL contains the query parameter ``uc`` with this value, for example
+``?uc=my-secret-value``.
+
+Requests with the query parameter ``uc`` bypass the page cache, whatever its
+value. Otherwise a page rendered without Usercentrics would be cached and
+delivered to all visitors. Add ``uc`` to the excluded cHash parameters, so the
+URL works without a cHash:
+
+.. code-block:: php
+    :caption: config/system/settings.php
+
+    $GLOBALS['TYPO3_CONF_VARS']['FE']['cacheHash']['excludedParameters'][] = 'uc';
+
+.. code-block:: typoscript
+    :caption: EXT:site_package/Configuration/TypoScript/Extensions/LiaUsercentrics/Constants.typoscript
+
+    plugin.tx_liausercentrics {
+      ucQueryParameter = my-secret-value
+      settings {
+        excludedPages = 12, 34
+      }
+    }
 
 Language
 ~~~~~~~~

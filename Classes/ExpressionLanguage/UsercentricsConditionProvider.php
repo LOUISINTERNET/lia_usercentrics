@@ -14,7 +14,7 @@ class UsercentricsConditionProvider extends AbstractProvider
     public function __construct()
     {
         $this->expressionLanguageProviders = [
-            'usercentrics' => UsercentricsConditionFunctionProvider::class,
+            UsercentricsConditionFunctionProvider::class,
         ];
     }
 }

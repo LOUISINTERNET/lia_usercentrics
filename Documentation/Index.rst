@@ -37,6 +37,10 @@ are blocked by default until the user grants consent for their use.
 
         Learn how to setup up and configure this extension.
 
+    ..  card:: :ref:`Upgrade <upgrade>`
+
+        Check these points when you update the extension to a new version.
+
     ..  card:: :ref:`Frequently Asked Questions (FAQ) <faq>`
 
         These questions have been frequently asked.
