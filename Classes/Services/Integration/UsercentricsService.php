@@ -296,7 +296,7 @@ class UsercentricsService
     protected function addBlockOnlyInlineScript(string $whitelistedServices): void
     {
         $blockOnlyServices = json_encode(GeneralUtility::trimExplode(',', $whitelistedServices, true));
-        $this->pageRenderer->addHeaderData('<script type="text/javascript" id="blockOnly">uc.blockOnly(' . $blockOnlyServices . ');</script>');
+        $this->pageRenderer->addHeaderData('<script type="text/javascript" id="blockOnly">window.uc && uc.blockOnly(' . $blockOnlyServices . ');</script>');
     }
 
     /**
@@ -309,7 +309,7 @@ class UsercentricsService
     {
         $customServiceOverlay = $this->buildCustomOverlayJson(CustomOverlayIntegration::parse($overlayIntegration));
 
-        $this->pageRenderer->addHeaderData('<script type="text/javascript" id="blockElements">uc.blockElements(' . $customServiceOverlay . ');</script>');
+        $this->pageRenderer->addHeaderData('<script type="text/javascript" id="blockElements">window.uc && uc.blockElements(' . $customServiceOverlay . ');</script>');
     }
 
     /**
@@ -324,7 +324,7 @@ class UsercentricsService
         $functionCallList = [];
 
         foreach ($serviceIds as $id) {
-            $functionCallList[] = 'uc.' . $functionName . '(\'' . $id . '\')';
+            $functionCallList[] = 'window.uc && uc.' . $functionName . '(\'' . $id . '\')';
         }
 
         $this->pageRenderer->addHeaderData("<script type='text/javascript' id='uc-" . $functionName . "'>" . implode(';', $functionCallList) . '</script>');

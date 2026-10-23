@@ -121,11 +121,47 @@ final class UsercentricsServiceSettingsTest extends UnitTestCase
         self::assertSame($expected, $subject->blocksIframes());
     }
 
+    #[Test]
+    public function smartDataProtectorInlineScriptsSkipTheCallsWithoutTheUcGlobal(): void
+    {
+        $headerData = [];
+        $pageRenderer = self::createStub(PageRenderer::class);
+        $pageRenderer->method('addHeaderData')->willReturnCallback(static function (string $data) use (&$headerData): void {
+            $headerData[] = $data;
+        });
+        $subject = $this->createSubject(
+            ['settings.' => [
+                'active' => '1',
+                'useSmartDataProtector' => '1',
+                'whitelistedSDPServices' => 'S1_9Vsuj-Q, HkocEodjb7',
+                'customOverlayIntegration' => 'BJz7qNsdj-7:youtube',
+                'reloadOnOptIn' => 'S1_9Vsuj-Q, HkocEodjb7',
+                'reloadOnOptOut' => 'S1_9Vsuj-Q',
+            ]],
+            new ServerRequest('https://example.com/'),
+            SystemEnvironmentBuilder::REQUESTTYPE_FE,
+            $pageRenderer
+        );
+
+        $subject->addLibraryConfiguration();
+
+        self::assertSame([
+            '<script type="text/javascript" id="blockOnly">window.uc && uc.blockOnly(["S1_9Vsuj-Q","HkocEodjb7"]);</script>',
+            '<script type="text/javascript" id="blockElements">window.uc && uc.blockElements({"BJz7qNsdj-7":"[data-uc=\"youtube\"]"});</script>',
+            "<script type='text/javascript' id='uc-reloadOnOptIn'>window.uc && uc.reloadOnOptIn('S1_9Vsuj-Q');window.uc && uc.reloadOnOptIn('HkocEodjb7')</script>",
+            "<script type='text/javascript' id='uc-reloadOnOptOut'>window.uc && uc.reloadOnOptOut('S1_9Vsuj-Q')</script>",
+        ], $headerData);
+    }
+
     /**
      * @param array<string, mixed> $pluginTypoScript
      */
-    private function createSubject(array $pluginTypoScript, ServerRequestInterface $request, int $applicationType = SystemEnvironmentBuilder::REQUESTTYPE_FE): UsercentricsService
-    {
+    private function createSubject(
+        array $pluginTypoScript,
+        ServerRequestInterface $request,
+        int $applicationType = SystemEnvironmentBuilder::REQUESTTYPE_FE,
+        ?PageRenderer $pageRenderer = null
+    ): UsercentricsService {
         $GLOBALS['TYPO3_REQUEST'] = $request->withAttribute('applicationType', $applicationType);
 
         $configurationManager = new class (['plugin.' => ['tx_liausercentrics.' => $pluginTypoScript]]) implements ConfigurationManagerInterface {
@@ -153,7 +189,7 @@ final class UsercentricsServiceSettingsTest extends UnitTestCase
         $readerService = new ReaderService($configurationManager, new TypoScriptService());
 
         return new UsercentricsService(
-            self::createStub(PageRenderer::class),
+            $pageRenderer ?? self::createStub(PageRenderer::class),
             new AssetCollector(),
             $readerService,
             self::createStub(EventDispatcher::class),
